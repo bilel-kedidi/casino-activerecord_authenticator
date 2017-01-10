@@ -40,8 +40,10 @@ class CASino::ActiveRecordAuthenticator
   def validate(username, password)
    
     if @options[:is_redmine]
-      user =  User.try_to_login(username, password, false)
-      if user.nil?
+      user = @model.send("find_by_login", username)
+    password_from_database = user.send(@options[:password_column])
+salt = user.send('salt')
+      if Digest::SHA1.hexdigest("#{salt}#{Digest::SHA1.hexdigest password}") == password_from_database
         user_data(user)
       else
         return false
